@@ -138,7 +138,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 #--- CORS ---
-CORS_ALLOWED_ORIGIN = [
-    "http://localhost:4200", #angular
-    "http://127.0.0.1:5173", #react (vite)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
 ]

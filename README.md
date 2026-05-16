@@ -1,48 +1,27 @@
-# rh_django
+# RH Django - Full Stack HR Management
 
-API RESTful para gestión de empleados (Recursos Humanos) construida con Django y Django REST Framework.
+Sistema de gestión de Recursos Humanos con Django REST API backend y React frontend.
 
-## Tecnologías
+## Proyectos
 
-- **Python 3.12**
-- **Django 6.0**
-- **Django REST Framework 3.17**
-- **MySQL** (base de datos)
-- **django-cors-headers** (CORS para frontend Angular/React)
+### `/backend` - Django REST API
+API para CRUD de empleados con Django y Django REST Framework, base de datos MySQL.
 
-## Instalación
+```
+cd backend
+python manage.py runserver
+```
 
-1. Clona el repositorio:
-   ```bash
-   git clone https://github.com/AnthonyAndino/rh_django.git
-   cd rh_django
-   ```
+### `/frontend` - React + Vite
+Interfaz de usuario para listado y gestión de empleados.
 
-2. Crea y activa el entorno virtual:
-   ```bash
-   python -m venv .venv
-   .venv\Scripts\activate  # Windows
-   source .venv/bin/activate  # Linux/Mac
-   ```
+```
+cd frontend
+npm install
+npm run dev
+```
 
-3. Instala dependencias:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Configura la base de datos MySQL en `rh_django/settings.py`.
-
-5. Ejecuta las migraciones:
-   ```bash
-   python manage.py migrate
-   ```
-
-6. Inicia el servidor:
-   ```bash
-   python manage.py runserver
-   ```
-
-## API Endpoints
+## Endpoints de la API
 
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -52,14 +31,3 @@ API RESTful para gestión de empleados (Recursos Humanos) construida con Django 
 | PUT | `/api/empleados/<id>` | Actualizar un empleado |
 | PATCH | `/api/empleados/<id>` | Actualización parcial |
 | DELETE | `/api/empleados/<id>` | Eliminar un empleado |
-
-## Modelo
-
-**Empleado**
-
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| idEmpleado | AutoField | ID autoincremental |
-| nombre | CharField(255) | Nombre del empleado |
-| departamento | CharField(100) | Departamento |
-| sueldo | DecimalField(10,2) | Salario |

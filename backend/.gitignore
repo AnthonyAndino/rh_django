@@ -1,14 +1,21 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
 # Python
 __pycache__/
 *.py[cod]
 *.pyo
 *.egg-info/
+dist/
 build/
 
-# Virtual environments
-.venv/
-venv/
-env/
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
 # Django
 *.log
@@ -16,21 +23,9 @@ local_settings.py
 db.sqlite3
 media/
 
-# Node
-node_modules/
-dist/
-dist-ssr/
-*.local
-
 # Environment variables
 .env
 .env.local
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
 
 # OS
 Thumbs.db
