@@ -1,15 +1,18 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom"
+import Navegacion from "./Navegacion"
 import ListadoEmpleados from "./empleados/ListadoEmpleados"
+import AgregarEmpleado from "./empleados/AgregarEmpleado"
 
 export default function App() {
   return (
-    <div className="container py-4">
-      <header className="mb-4">
-        <h1 className="h3 mb-0">Sistema de Recursos Humanos</h1>
-        <p className="text-secondary mb-0">Listado de Empleados</p>
-      </header>
-
-      <ListadoEmpleados />
-
-    </div>
+    <BrowserRouter>
+      <Navegacion />
+      <div className="container pb-4">
+        <Routes>
+          <Route path="/" element={<ListadoEmpleados />} />
+          <Route path="/agregar" element={<AgregarEmpleado />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
   )
 }
