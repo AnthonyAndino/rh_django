@@ -2,28 +2,47 @@ import { useEffect, useState } from "react"
 import axios from 'axios'
 import { NumericFormat } from 'react-number-format'
 import { urlBase } from "../config"
+import { Link } from "react-router-dom"
 
 export default function ListadoEmpleados() {
     const [empleados, setEmpleados] = useState([])
     const [cargando, setCargando] = useState(true)
     const [error, setError] = useState('')
+    const [eliminandoId, setEliminandoId] = useState(null)
+
+    const cargar = async () => {
+        try {
+            const { data } = await axios.get(urlBase)
+            setEmpleados(Array.isArray(data) ? data : [])
+        } catch (e) {
+            setError('No se pudo cargar el listado de empleados')
+        }
+    }
 
     useEffect(() => {
-        const cargar = async () => {
-            try {
-                const { data } = await axios.get(urlBase)
-                
-                setEmpleados(Array.isArray(data) ? data : [])
-            } catch (error) {
-                setError('No se puede cargar el listado de empleados')
-            } finally {
-                setCargando(false)
-            }
+        const boot = async () => {
+            setCargando(true)
+            await cargar()
+            setCargando(false)
         }
-
-        cargar()
-
+        boot()
     }, [])
+
+
+    const eliminar = async (idEmpleado) => {
+        const ok = window.confirm('Seguro que deseas eliminar este empleado?')
+        if (!ok) return
+        
+        try {
+            setEliminandoId(idEmpleado)
+            await axios.delete(`${urlBase}/${idEmpleado}`)
+            await cargar()
+        } catch (e) {
+            alert('No se pudo eliminar el empleado.')
+        } finally {
+            setEliminandoId(null)
+        }
+    }
 
     if (cargando) return <p className="text-secondary">Cargando...</p>
 
@@ -69,11 +88,16 @@ export default function ListadoEmpleados() {
                                             />
                                         </td>
                                         <td>
-                                            <button type="button" className="btn btn-sm btn-primary me-2" disabled>
+                                            <Link to={`/editar/${e.idEmpleado}`} className="btn btn-sm btn-primary me-2">
                                                 Editar
-                                            </button>
-                                            <button type="button" className="btn btn-sm btn-outline-danger">
-                                                Eliminar
+                                            </Link>
+                                            <button 
+                                                type="button"
+                                                className="btn btn-sm btn-outline-danger"
+                                                onClick={() => eliminar(e.idEmpleado)}
+                                                disabled={eliminandoId === e.idEmpleado}
+                                            >
+                                                {eliminandoId === e.idEmpleado ? 'Eliminando...' : 'Eliminar'}
                                             </button>
                                         </td>
                                     </tr>
@@ -86,4 +110,3 @@ export default function ListadoEmpleados() {
         </div>
     )
 }
-

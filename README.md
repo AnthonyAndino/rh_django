@@ -13,7 +13,7 @@ python manage.py runserver
 ```
 
 ### `/frontend` - React + Vite
-Interfaz de usuario con listado de empleados y formulario para agregar nuevos. Navegación con React Router.
+Interfaz de usuario con CRUD completo de empleados. Navegación con React Router.
 
 ```
 cd frontend
@@ -23,8 +23,9 @@ npm run dev
 
 | Ruta | Página |
 |------|--------|
-| `/` | Listado de empleados |
+| `/` | Listado de empleados (con eliminar) |
 | `/agregar` | Formulario para agregar empleado |
+| `/editar/:idEmpleado` | Formulario para editar empleado |
 
 ## Endpoints de la API
 
