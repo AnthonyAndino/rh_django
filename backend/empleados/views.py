@@ -154,9 +154,9 @@ class DashboardAPIView(APIView):
         if hasattr(user, 'profile') and user.profile.rol == 'empleado':
             if not hasattr(user, 'empleado'):
                 return Response({
-                    'total_empleados': 0,
-                    'asistencias_hoy': 0,
-                    'retardos_hoy': 0,
+                    'es_empleado': True,
+                    'total_asistencias': 0,
+                    'retardos_acumulados': 0,
                     'nomina_pagada_mes': 0,
                     'ultimas_asistencias': []
                 })

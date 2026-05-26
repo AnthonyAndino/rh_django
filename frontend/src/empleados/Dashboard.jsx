@@ -17,7 +17,8 @@ export default function Dashboard() {
             const { data } = await obtenerDashboard();
             setDatos(data);
         } catch (e) {
-            setError('No se pudieron obtener las estadísticas del Dashboard.');
+            console.error('Error al cargar dashboard:', e?.response?.data || e.message || e);
+            setError(e?.response?.data?.error || 'No se pudieron obtener las estadisticas del Dashboard.');
         } finally {
             setCargando(false);
         }

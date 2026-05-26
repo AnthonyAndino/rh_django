@@ -155,13 +155,12 @@ export default function ListadoEmpleados() {
             <div className="row mb-4 g-3 align-items-center">
                 {/* Cuadro de texto */}
                 <div className="col-lg-6 col-md-12">
-                    <div className="position-relative">
-                        <Search size={18} className="text-secondary position-absolute" style={{ left: '16px', top: '15px' }} />
+                    <div className="input-search-wrapper">
+                        <Search size={18} className="input-search-icon" />
                         <input
                             type="text"
-                            className="form-control"
+                            className="form-control input-search-field"
                             placeholder="Buscar por nombre, puesto o departamento..."
-                            style={{ paddingLeft: '45px' }}
                             value={busqueda}
                             onChange={(e) => setBusqueda(e.target.value)}
                         />

@@ -475,10 +475,28 @@ p {
   padding-left: 48px !important;
 }
 
-/* Foco de buscador */
-.position-relative svg {
+/* --- INPUT CON ICONO DE BUSQUEDA (Flexbox) --- */
+.input-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-search-icon {
+  position: absolute;
+  left: 16px;
   color: var(--text-muted);
-  opacity: 0.8;
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 2;
+}
+.input-search-field {
+  padding-left: 46px !important;
+}
+
+/* Foco de buscador (restringido solo al wrapper) */
+.input-search-wrapper .form-control:focus + .input-search-icon {
+  color: var(--primary-terracotta);
+  opacity: 0.9;
 }
 
 /* Animación sutil de entrada */
