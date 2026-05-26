@@ -29,9 +29,8 @@ export default function Navegacion() {
                         </li>
                         <li className="nav-item">
                             <Link 
-                                className="nav-link d-flex align-items-center gap-2 text-secondary" 
-                                to="#"
-                                onClick={() => alert("Módulo de Asistencia: Base de datos lista en Backend. ¡Próximamente interfaz en frontend!")}
+                                className={`nav-link d-flex align-items-center gap-2 ${location.pathname === '/asistencia' ? 'active' : ''}`} 
+                                to="/asistencia"
                             >
                                 <Clock size={16} />
                                 Asistencia
@@ -39,9 +38,8 @@ export default function Navegacion() {
                         </li>
                         <li className="nav-item">
                             <Link 
-                                className="nav-link d-flex align-items-center gap-2 text-secondary" 
-                                to="#"
-                                onClick={() => alert("Módulo de Nóminas: Base de datos y Stored Procedure listos en Backend. ¡Próximamente interfaz en frontend!")}
+                                className={`nav-link d-flex align-items-center gap-2 ${location.pathname === '/nominas' ? 'active' : ''}`} 
+                                to="/nominas"
                             >
                                 <DollarSign size={16} />
                                 Nómina
