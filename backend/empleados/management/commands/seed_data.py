@@ -12,6 +12,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write('Poblando base de datos con datos demo...')
 
+        # Limpiar datos existentes para evitar duplicados
+        Nomina.objects.all().delete()
+        Asistencia.objects.all().delete()
+        Empleado.objects.all().delete()
+        UserProfile.objects.all().delete()
+        User.objects.filter(is_superuser=False).delete()
+        ConfiguracionNomina.objects.all().delete()
+
         # --- Usuario admin ---
         admin_user, _ = User.objects.get_or_create(username='admin')
         admin_user.set_password('admin123')
@@ -61,7 +69,7 @@ class Command(BaseCommand):
             emp_user.save()
 
         # --- Configuracion de nomina ---
-        ConfiguracionNomina.objects.get_or_create(
+        ConfiguracionNomina.objects.create(
             porcentaje_deduccion=Decimal('10.00'),
             bono_fijo=Decimal('120.00'),
         )
