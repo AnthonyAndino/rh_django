@@ -118,9 +118,9 @@ class NominaListCreateAPIView(generics.ListCreateAPIView):
             try:
                 with connection.cursor() as cursor:
                     cursor.callproc('GenerarNominaMensual', [fecha_pago])
-                return Response({'message': '¡Nóminas de la empresa generadas con éxito usando el Stored Procedure!'}, status=status.HTTP_201_CREATED)
+                return Response({'message': '¡Nóminas del periodo generadas con éxito!'}, status=status.HTTP_201_CREATED)
             except Exception as e:
-                return Response({'error': f'Error al ejecutar procedimiento: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response({'error': 'Error al generar la nómina. Verifica que hayan empleados activos con salario registrado.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return super().post(request, *args, **kwargs)
 
     def get_queryset(self):

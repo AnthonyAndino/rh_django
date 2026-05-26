@@ -14,6 +14,7 @@ export default function Dashboard() {
     const [datos, setDatos] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState('');
+    const [chartHeight, setChartHeight] = useState(Math.min(300, window.innerHeight * 0.35));
 
     const cargarDashboard = async () => {
         try {
@@ -30,6 +31,12 @@ export default function Dashboard() {
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         cargarDashboard();
+    }, []);
+
+    useEffect(() => {
+        const handleResize = () => setChartHeight(Math.min(300, window.innerHeight * 0.35));
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     if (cargando) return <div className="text-center py-5"><p className="text-secondary">Cargando panel de control...</p></div>;
@@ -175,7 +182,7 @@ export default function Dashboard() {
                                 <span className="text-dark fw-bold">Empleados por Departamento</span>
                             </div>
                             <div className="card-body">
-                                <ResponsiveContainer width="100%" height={300}>
+                                <ResponsiveContainer width="100%" height={chartHeight}>
                                     <BarChart data={datos.empleados_por_departamento} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
                                         <XAxis
@@ -236,42 +243,40 @@ export default function Dashboard() {
                                 </div>
                             ) : (
                             <ScrollableTable>
-                            <div className="table-responsive">
                                 <table className="table table-hover align-middle">
-                                        <thead>
-                                            <tr>
-                                                <th>Empleado</th>
-                                                <th>Fecha</th>
-                                                <th>Hora Entrada</th>
-                                                <th>Hora Salida</th>
-                                                <th>Estado</th>
+                                    <thead>
+                                        <tr>
+                                            <th>Empleado</th>
+                                            <th>Fecha</th>
+                                            <th>Hora Entrada</th>
+                                            <th>Hora Salida</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(datos?.ultimas_asistencias || []).map((asist) => (
+                                            <tr key={asist.idAsistencia}>
+                                                <td className="fw-semibold">{asist.nombre_empleado}</td>
+                                                <td className="text-secondary">{asist.fecha}</td>
+                                                <td className="font-monospace text-info">{asist.hora_entrada}</td>
+                                                <td className="font-monospace text-secondary">
+                                                    {asist.hora_salida || '--:--:--'}
+                                                </td>
+                                                <td>
+                                                    {asist.estado.includes('A Tiempo') ? (
+                                                        <span className="badge-minimal active">
+                                                            {asist.estado}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="badge-minimal inactive">
+                                                            {asist.estado}
+                                                        </span>
+                                                    )}
+                                                </td>
                                             </tr>
-                                        </thead>
-                                        <tbody>
-                                            {(datos?.ultimas_asistencias || []).map((asist) => (
-                                                <tr key={asist.idAsistencia}>
-                                                    <td className="fw-semibold">{asist.nombre_empleado}</td>
-                                                    <td className="text-secondary">{asist.fecha}</td>
-                                                    <td className="font-monospace text-info">{asist.hora_entrada}</td>
-                                                    <td className="font-monospace text-secondary">
-                                                        {asist.hora_salida || '--:--:--'}
-                                                    </td>
-                                                    <td>
-                                                        {asist.estado.includes('A Tiempo') ? (
-                                                            <span className="badge-minimal active">
-                                                                {asist.estado}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="badge-minimal inactive">
-                                                                {asist.estado}
-                                                            </span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </ScrollableTable>
                             )}
                         </div>

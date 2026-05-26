@@ -306,7 +306,7 @@ export default function ControlAsistencias() {
                             {/* FILTROS EN CABECERA (Solo administradores) */}
                             {!esEmpleado && (
                                 <div className="d-flex align-items-center gap-2 flex-wrap" style={{ fontSize: '0.8rem' }}>
-                                    <div style={{ minWidth: '160px' }}>
+                                    <div style={{ minWidth: '140px' }}>
                                         <TomSelect
                                             value={filtroEmpleado}
                                             onChange={(e) => setFiltroEmpleado(e.target.value)}
@@ -340,7 +340,6 @@ export default function ControlAsistencias() {
                                 </div>
                             ) : (
                                 <ScrollableTable>
-                                <div className="table-responsive">
                                     <table className="table table-hover align-middle">
                                         <thead>
                                             <tr>
@@ -382,7 +381,6 @@ export default function ControlAsistencias() {
                                             })}
                                         </tbody>
                                     </table>
-                                </div>
                                 </ScrollableTable>
                             )}
                         </div>

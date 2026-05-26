@@ -35,65 +35,23 @@ export default function ScrollableTable({ children, maxHeight }) {
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="scrollable-table-wrapper">
       {canScrollLeft && (
         <button
           onClick={() => scroll(-1)}
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 10,
-            width: 32,
-            height: 56,
-            border: '1px solid var(--border-color)',
-            borderLeft: 'none',
-            borderRadius: '0 10px 10px 0',
-            background: 'rgba(255,255,255,0.95)',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '2px 0 12px rgba(44,43,41,0.08)',
-            backdropFilter: 'blur(4px)',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--primary-terracotta)'; e.currentTarget.style.boxShadow = '2px 0 16px rgba(233,105,68,0.15)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.boxShadow = '2px 0 12px rgba(44,43,41,0.08)' }}
+          className="scroll-arrow scroll-arrow-left"
+          aria-label="Desplazar a la izquierda"
         >
-          <ChevronLeft size={18} />
+          <ChevronLeft size={20} />
         </button>
       )}
       {canScrollRight && (
         <button
           onClick={() => scroll(1)}
-          style={{
-            position: 'absolute',
-            right: 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 10,
-            width: 32,
-            height: 56,
-            border: '1px solid var(--border-color)',
-            borderRight: 'none',
-            borderRadius: '10px 0 0 10px',
-            background: 'rgba(255,255,255,0.95)',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '-2px 0 12px rgba(44,43,41,0.08)',
-            backdropFilter: 'blur(4px)',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--primary-terracotta)'; e.currentTarget.style.boxShadow = '-2px 0 16px rgba(233,105,68,0.15)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.boxShadow = '-2px 0 12px rgba(44,43,41,0.08)' }}
+          className="scroll-arrow scroll-arrow-right"
+          aria-label="Desplazar a la derecha"
         >
-          <ChevronRight size={18} />
+          <ChevronRight size={20} />
         </button>
       )}
       <div

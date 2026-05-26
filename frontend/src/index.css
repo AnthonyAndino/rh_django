@@ -238,10 +238,6 @@
   background: #2C2927;
 }
 
-[data-theme="dark"] .sidebar-menu::-webkit-scrollbar-thumb {
-  background: #363230;
-}
-
 [data-theme="dark"] .table-container::-webkit-scrollbar-thumb {
   background: #363230;
 }
@@ -334,6 +330,7 @@ body {
   min-height: 100vh;
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* Forzar mejor contraste en textos secundarios */
@@ -357,36 +354,44 @@ p {
 /* --- ESTRUCTURA GENERAL CON SIDEBAR --- */
 .app-wrapper {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
-/* Sidebar Fijo Izquierdo */
+/* Sidebar Izquierdo */
 .sidebar {
   width: 270px;
+  flex-shrink: 0;
   background: #FFFFFF;
   border-right: 1px solid var(--border-color);
   padding: 0;
   display: flex;
   flex-direction: column;
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
+  position: relative;
   z-index: 100;
+  overflow: hidden;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Contenedor Principal Ajustado al Sidebar */
+/* Contenedor interno del sidebar */
+.sidebar-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Contenedor Principal con scroll propio */
 .main-content {
   flex: 1;
-  margin-left: 270px;
-  padding: 48px;
+  min-width: 0;
+  overflow-y: auto;
+  padding: clamp(16px, 3.5vw, 48px) clamp(12px, 3vw, 48px);
   background-color: var(--bg-app);
-  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* --- CABECERA DECORATIVA DEL SIDEBAR --- */
 .sidebar-header {
+  flex-shrink: 0;
   background: linear-gradient(135deg, var(--primary-terracotta) 0%, #D55734 100%);
   padding: 32px 24px 24px;
   text-align: center;
@@ -439,6 +444,7 @@ p {
 
 /* Perfil de Usuario en el Sidebar */
 .sidebar-user {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -492,17 +498,6 @@ p {
   flex-direction: column;
   gap: 4px;
   flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.sidebar-menu::-webkit-scrollbar {
-  width: 3px;
-}
-
-.sidebar-menu::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
 }
 
 .sidebar-link {
@@ -634,6 +629,7 @@ p {
 
 /* --- FOOTER DEL SIDEBAR (LOGOUT SIEMPRE VISIBLE) --- */
 .sidebar-footer {
+  flex-shrink: 0;
   border-top: 1px solid var(--border-color);
   padding: 12px;
 }
@@ -744,10 +740,6 @@ p {
   left: -8px;
 }
 
-.sidebar--collapsed ~ .main-content {
-  margin-left: 80px;
-}
-
 @media (max-width: 991.98px) {
   .sidebar--collapsed {
     width: 270px;
@@ -784,12 +776,6 @@ p {
   }
   .sidebar--collapsed .sidebar-footer .sidebar-label {
     display: inline;
-  }
-  .sidebar--collapsed ~ .main-content {
-    margin-left: 0;
-  }
-  .sidebar--collapsed.sidebar--open ~ .main-content {
-    margin-left: 0;
   }
   .sidebar-collapse-btn {
     display: none;
@@ -1016,12 +1002,67 @@ p {
 }
 
 /* --- TABLAS MINIMALISTAS --- */
+.scrollable-table-wrapper {
+  position: relative;
+}
+
 .table-container {
   max-height: 480px;
   overflow: auto;
   border-radius: var(--border-radius-md);
   border: 1px solid var(--border-color);
   position: relative;
+}
+
+.scroll-arrow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36px;
+  z-index: 10;
+  border: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.97);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  backdrop-filter: blur(4px);
+}
+
+.scroll-arrow:hover {
+  color: var(--primary-terracotta);
+  background: #FFFFFF;
+}
+
+.scroll-arrow-left {
+  left: 0;
+  border-left: none;
+  border-radius: 0 var(--border-radius-md) var(--border-radius-md) 0;
+  box-shadow: 2px 0 16px rgba(44,43,41,0.08);
+}
+
+.scroll-arrow-right {
+  right: 0;
+  border-right: none;
+  border-radius: var(--border-radius-md) 0 0 var(--border-radius-md);
+  box-shadow: -2px 0 16px rgba(44,43,41,0.08);
+}
+
+[data-theme="dark"] .scroll-arrow {
+  background: rgba(37,35,34,0.97);
+}
+
+[data-theme="dark"] .scroll-arrow {
+  background: rgba(37,35,34,0.97);
+}
+
+[data-theme="dark"] .scroll-arrow:hover {
+  background: #2C2927;
+  color: var(--primary-terracotta);
+  box-shadow: none;
 }
 
 .table-container::-webkit-scrollbar {
@@ -1496,18 +1537,92 @@ p {
   min-height: auto !important;
 }
 
+/* --- PANTALLAS INTERMEDIAS: SIDEBAR MÁS COMPACTO --- */
+@media (max-width: 1199.98px) and (min-width: 992px) {
+  .sidebar {
+    width: 220px;
+  }
+  .sidebar--collapsed {
+    width: 64px;
+  }
+  .sidebar--collapsed .sidebar-link,
+  .sidebar--collapsed .sidebar-link-danger,
+  .sidebar--collapsed .sidebar-theme-toggle {
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+  }
+  .sidebar--collapsed .sidebar-icon-box {
+    width: 24px;
+    height: 24px;
+  }
+  .sidebar--collapsed .sidebar-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  .sidebar--collapsed .sidebar-header {
+    padding: 16px 8px 12px;
+  }
+  .sidebar--collapsed .sidebar-user {
+    padding: 10px 8px;
+  }
+  .sidebar--collapsed .sidebar-menu {
+    padding: 6px;
+  }
+  .sidebar--collapsed .sidebar-footer {
+    padding: 8px 6px;
+  }
+  .sidebar--collapsed .sidebar-brand-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .sidebar--collapsed .sidebar-collapse-btn {
+    top: 16px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .sidebar-header {
+    padding: 24px 20px 20px;
+  }
+  .sidebar-user {
+    padding: 16px 16px 12px;
+  }
+  .sidebar-menu {
+    padding: 8px 8px;
+  }
+  .sidebar-brand-icon {
+    width: 42px;
+    height: 42px;
+  }
+  .sidebar-link {
+    padding: 9px 12px;
+    font-size: 0.82rem;
+  }
+  .sidebar-icon-box {
+    width: 32px;
+    height: 32px;
+  }
+  .sidebar-collapse-btn {
+    top: 52px;
+    width: 24px;
+    height: 24px;
+    right: -12px;
+  }
+}
+
 /* --- RESPONSIVE: TABLET Y MOBILE --- */
 @media (max-width: 991.98px) {
   .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .sidebar.sidebar--open {
     transform: translateX(0);
-  }
-  .main-content {
-    margin-left: 0 !important;
-    padding: 24px 16px !important;
   }
   .sidebar-toggle {
     display: flex !important;
@@ -1524,9 +1639,6 @@ p {
 }
 
 @media (max-width: 767.98px) {
-  .main-content {
-    padding: 16px 12px !important;
-  }
   .card {
     padding: 4px !important;
   }

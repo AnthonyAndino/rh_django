@@ -221,7 +221,6 @@ export default function ControlNominas() {
                         </div>
                     ) : (
                         <ScrollableTable>
-                        <div className="table-responsive">
                             <table className="table table-hover align-middle">
                                 <thead>
                                     <tr>
@@ -289,7 +288,6 @@ export default function ControlNominas() {
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
                         </ScrollableTable>
                     )}
                 </div>
