@@ -13,4 +13,5 @@ from django.core.asgi import get_asgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'rh_django.settings')
 
+# ASGI entry point — used by async servers (Daphne, Uvicorn, etc.)
 application = get_asgi_application()

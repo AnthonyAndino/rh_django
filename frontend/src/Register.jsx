@@ -1,3 +1,5 @@
+// Registration page — creates a new user via /api/auth/register
+// and auto-logs in on success. First registered user becomes admin.
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
@@ -36,8 +38,7 @@ export default function Register() {
     };
 
     return (
-        <div className="auth-wrapper animate-fade-in">
-            <div className="auth-card">
+        <div className="auth-card">
                 <div className="auth-header">
                     <Briefcase size={36} className="text-info mx-auto" />
                     <h2 className="auth-title">Crear Cuenta</h2>
@@ -108,6 +109,5 @@ export default function Register() {
                     <Link to="/login" className="auth-link">Iniciar Sesión</Link>
                 </div>
             </div>
-        </div>
     );
 }

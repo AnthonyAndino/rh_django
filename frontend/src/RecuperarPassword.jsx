@@ -1,3 +1,5 @@
+// Password recovery page — sends email to /api/auth/recover-password.
+// Displays success/error messages inline.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -32,8 +34,7 @@ export default function RecuperarPassword() {
     };
 
     return (
-        <div className="auth-wrapper animate-fade-in">
-            <div className="auth-card">
+        <div className="auth-card">
                 <div className="auth-header">
                     <Briefcase size={36} className="text-info mx-auto" />
                     <h2 className="auth-title">Recuperación</h2>
@@ -82,6 +83,5 @@ export default function RecuperarPassword() {
                     <Link to="/login" className="auth-link">Regresar al Login</Link>
                 </div>
             </div>
-        </div>
     );
 }

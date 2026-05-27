@@ -1,3 +1,5 @@
+// Login page — POSTs credentials to /api/auth/login,
+// stores the token/user via useAuth().login(), then navigates to /.
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
@@ -35,8 +37,7 @@ export default function Login() {
     };
 
     return (
-        <div className="auth-wrapper animate-fade-in">
-            <div className="auth-card">
+        <div className="auth-card">
                 <div className="auth-header">
                     <Briefcase size={36} className="text-info animate-pulse mx-auto" />
                     <h2 className="auth-title">RH Enterprise</h2>
@@ -96,6 +97,5 @@ export default function Login() {
                     <Link to="/registro" className="auth-link">Registrarse</Link>
                 </div>
             </div>
-        </div>
     );
 }

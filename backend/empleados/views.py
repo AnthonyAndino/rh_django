@@ -1,3 +1,10 @@
+# API views for the RRHH management system.
+#
+# Endpoints are role-aware: admin users get full CRUD and company-wide data;
+# regular employees see only their own records (self-service portal).
+#
+# Auth endpoints (register/login/recover) are public (AllowAny).
+
 from rest_framework import generics, permissions, status
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
@@ -13,8 +20,9 @@ from .serializers import (
     ConfiguracionNominaSerializer
 )
 
-# --- PERMISO PERSONALIZADO PARA ADMINISTRADORES ---
+
 class IsAdminRole(permissions.BasePermission):
+    """Custom permission: only users with profile.rol == 'admin' may proceed."""
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated and 
@@ -22,28 +30,28 @@ class IsAdminRole(permissions.BasePermission):
             request.user.profile.rol == 'admin'
         )
 
-# --- VISTAS DE EMPLEADO (CON ROLES) ---
+
+# --- EMPLOYEE ENDPOINTS ---
+
 class EmpleadoListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = EmpleadoSerializer
 
     def get_permissions(self):
-        # Solo administradores pueden crear empleados
         if self.request.method == 'POST':
             return [IsAdminRole()]
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
-        # Si es empleado, solo ve su propio perfil
         if hasattr(user, 'profile') and user.profile.rol == 'empleado':
             return Empleado.objects.filter(user=user)
         return Empleado.objects.all().order_by('idEmpleado')
+
 
 class EmpleadoRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = EmpleadoSerializer
 
     def get_permissions(self):
-        # Solo administradores pueden editar o eliminar empleados
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
             return [IsAdminRole()]
         return [permissions.IsAuthenticated()]
@@ -55,7 +63,8 @@ class EmpleadoRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView
         return Empleado.objects.all()
 
 
-# --- VISTAS DE ASISTENCIA (CON FILTROS Y ROLES) ---
+# --- ATTENDANCE ENDPOINTS ---
+
 class AsistenciaListCreateAPIView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = AsistenciaSerializer
@@ -64,11 +73,9 @@ class AsistenciaListCreateAPIView(generics.ListCreateAPIView):
         user = self.request.user
         queryset = Asistencia.objects.all().order_by('-fecha', '-hora_entrada')
         
-        # Si es empleado, solo ve sus propias asistencias
         if hasattr(user, 'profile') and user.profile.rol == 'empleado':
             queryset = queryset.filter(empleado__user=user)
         else:
-            # Filtros avanzados para administradores (Reporte por fecha y empleado)
             empleado_id = self.request.query_params.get('empleado_id')
             fecha_inicio = self.request.query_params.get('fecha_inicio')
             fecha_fin = self.request.query_params.get('fecha_fin')
@@ -84,7 +91,6 @@ class AsistenciaListCreateAPIView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         user = self.request.user
-        # Si es un empleado marcando su propia entrada, le asociamos su empleado automáticamente
         if hasattr(user, 'profile') and user.profile.rol == 'empleado':
             if hasattr(user, 'empleado'):
                 serializer.save(empleado=user.empleado)
@@ -94,24 +100,24 @@ class AsistenciaListCreateAPIView(generics.ListCreateAPIView):
         else:
             serializer.save()
 
+
 class AsistenciaRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Asistencia.objects.all()
     serializer_class = AsistenciaSerializer
 
 
-# --- VISTAS DE NÓMINA (CON ROLES) ---
+# --- PAYROLL ENDPOINTS ---
+
 class NominaListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = NominaSerializer
 
     def get_permissions(self):
-        # Solo administradores pueden generar o crear registros de nóminas
         if self.request.method == 'POST':
             return [IsAdminRole()]
         return [permissions.IsAuthenticated()]
 
     def post(self, request, *args, **kwargs):
-        # Si se envía fecha_pago, llamamos al Stored Procedure de MySQL
         fecha_pago = request.data.get('fecha_pago')
         if fecha_pago:
             from django.db import connection
@@ -125,32 +131,28 @@ class NominaListCreateAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        # Si es empleado, solo ve sus propios recibos de nómina
         if hasattr(user, 'profile') and user.profile.rol == 'empleado':
             return Nomina.objects.filter(empleado__user=user).order_by('-fecha_pago')
         return Nomina.objects.all().order_by('-fecha_pago')
 
 
-# --- NUEVO: VISTA CONFIGURACIÓN DE NÓMINA ---
 class ConfiguracionNominaListCreateAPIView(generics.ListCreateAPIView):
-    permission_classes = [IsAdminRole] # Solo admin
+    permission_classes = [IsAdminRole]
     queryset = ConfiguracionNomina.objects.all().order_by('-idConfiguracion')
     serializer_class = ConfiguracionNominaSerializer
 
 
-# --- NUEVO: ENDPOINT CONSOLIDADO DE DASHBOARD ---
+# --- DASHBOARD ENDPOINT ---
+
 class DashboardAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user
         hoy = date.today()
-        
-        # Filtramos por el mes actual
         mes_actual = hoy.month
         anio_actual = hoy.year
 
-        # Si el usuario es empleado normal, mostramos su dashboard personal
         if hasattr(user, 'profile') and user.profile.rol == 'empleado':
             if not hasattr(user, 'empleado'):
                 return Response({
@@ -176,7 +178,6 @@ class DashboardAPIView(APIView):
             })
             
         else:
-            # Dashboard del Administrador (KPIs de toda la empresa)
             total_empleados = Empleado.objects.filter(estatus='Activo').count()
             asistencias_hoy = Asistencia.objects.filter(fecha=hoy).count()
             retardos_hoy = Asistencia.objects.filter(fecha=hoy, estado__icontains='Retardo').count()
@@ -190,7 +191,6 @@ class DashboardAPIView(APIView):
 
             ultimas_asistencias = Asistencia.objects.filter(fecha=hoy).order_by('-hora_entrada')[:5]
             if len(ultimas_asistencias) == 0:
-                # Si no hay hoy, mostramos las últimas 5 generales
                 ultimas_asistencias = Asistencia.objects.all().order_by('-fecha', '-hora_entrada')[:5]
 
             return Response({
@@ -204,29 +204,28 @@ class DashboardAPIView(APIView):
             })
 
 
-# --- AUTENTICACIÓN: REGISTRO (CON ROLES) ---
+# --- AUTH ENDPOINTS ---
+
 class RegistroView(APIView):
-    permission_classes = [AllowAny] 
+    permission_classes = [AllowAny]
     
     def post(self, request):
         username = request.data.get('username')
         email = request.data.get('email')
         password = request.data.get('password')
-        rol = request.data.get('rol', 'empleado') # Rol por defecto: empleado
+        rol = request.data.get('rol', 'empleado')
 
         if not username or not email or not password:
             return Response({'error': 'Por favor rellena todos los campos'}, status=status.HTTP_400_BAD_REQUEST)
         if User.objects.filter(username=username).exists():
             return Response({'error': 'El nombre de usuario ya está en uso'}, status=status.HTTP_400_BAD_REQUEST)
             
-        # Crear usuario
         user = User.objects.create_user(username=username, email=email, password=password)
         
-        # Si es el primer usuario en la base de datos, lo hacemos admin por defecto para poder iniciar
+        # First user to register is auto-assigned admin role
         if User.objects.count() == 1:
             rol = 'admin'
             
-        # Crear perfil con rol
         UserProfile.objects.create(user=user, rol=rol)
         
         token, created = Token.objects.get_or_create(user=user)
@@ -240,7 +239,7 @@ class RegistroView(APIView):
             }
         }, status=status.HTTP_201_CREATED)
 
-# --- AUTENTICACIÓN: LOGIN (CON ROLES Y ENLACES) ---
+
 class CustomObtainAuthToken(APIView):
     permission_classes = [AllowAny]
     
@@ -252,11 +251,9 @@ class CustomObtainAuthToken(APIView):
         if user is not None:
             token, created = Token.objects.get_or_create(user=user)
             
-            # Obtener rol
             profile, created = UserProfile.objects.get_or_create(user=user)
             rol = profile.rol
             
-            # Obtener ID de empleado si está enlazado
             id_empleado = user.empleado.idEmpleado if hasattr(user, 'empleado') else None
             
             return Response({
@@ -271,7 +268,7 @@ class CustomObtainAuthToken(APIView):
         else:
             return Response({'error': 'Credenciales incorrectas'}, status=status.HTTP_400_BAD_REQUEST)
 
-# --- AUTENTICACIÓN: RECUPERAR CONTRASEÑA ---
+
 class RecuperarPasswordView(APIView):
     permission_classes = [AllowAny]
     def post(self, request):

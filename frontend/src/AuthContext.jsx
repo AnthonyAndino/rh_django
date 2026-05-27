@@ -1,4 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
+// Authentication context — manages login state, token persistence,
+// and an axios 401 interceptor that auto-logs out on unauthorized responses.
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
@@ -46,6 +48,7 @@ export function AuthProvider({ children }) {
         }
     }, [token]);
 
+    // Global 401 interceptor — triggers logout when the token expires
     useEffect(() => {
         const interceptor = axios.interceptors.response.use(
             response => response,

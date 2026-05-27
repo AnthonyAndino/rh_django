@@ -1,10 +1,19 @@
+# Database models for the RRHH management system.
+#
+# Empleado      — Core employee directory with corporate fields and profile photo.
+# Asistencia    — Daily attendance records (entry/exit times,迟到 status).
+# Nomina        — Monthly payroll records per employee.
+# ConfiguracionNomina — Global payroll parameters (deduction %, fixed bonus).
+# UserProfile   — Extends Django's User with role field (admin/empleado).
+
 from django.db import models
 from django.contrib.auth.models import User
 
-# --- PERFIL DEL USUARIO CON ROLES ---
+
 class UserProfile(models.Model):
+    """One-to-one profile extending Django's User with role-based access."""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    rol = models.CharField(max_length=20, default='empleado') # admin / empleado
+    rol = models.CharField(max_length=20, default='empleado')
 
     class Meta:
         db_table = 'user_profiles'
@@ -13,22 +22,18 @@ class UserProfile(models.Model):
         return f'{self.user.username} ({self.rol})'
 
 
-# --- MÓDULO EMPLEADOS (EXTENDIDO) ---
 class Empleado(models.Model):
+    """Employee record with corporate info, status, and optional user link."""
     idEmpleado = models.AutoField(primary_key=True)
     nombre = models.CharField(max_length=255)
     departamento = models.CharField(max_length=100)
     sueldo = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    # Nuevos campos corporativos
     fecha_contratacion = models.DateField(null=True, blank=True)
     puesto = models.CharField(max_length=150, default='Colaborador')
     correo_corporativo = models.EmailField(unique=True, null=True, blank=True)
     telefono = models.CharField(max_length=20, null=True, blank=True)
-    estatus = models.CharField(max_length=50, default='Activo') # Activo / Inactivo / Suspendido
+    estatus = models.CharField(max_length=50, default='Activo')
     foto_perfil = models.FileField(upload_to='foto_perfil/', null=True, blank=True)
-    
-    # Enlace opcional a un usuario del sistema (para portal del empleado)
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='empleado')
 
     class Meta:
@@ -38,8 +43,8 @@ class Empleado(models.Model):
         return f'{self.idEmpleado} - {self.nombre} ({self.puesto})'
 
 
-# --- MÓDULO ASISTENCIA ---
 class Asistencia(models.Model):
+    """Daily attendance record linked to an employee."""
     idAsistencia = models.AutoField(primary_key=True)
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE, db_column='idEmpleado', related_name='asistencias')
     fecha = models.DateField()
@@ -51,8 +56,8 @@ class Asistencia(models.Model):
         db_table = 'asistencia'
 
 
-# --- MÓDULO NÓMINAS ---
 class Nomina(models.Model):
+    """Monthly payroll record for an employee."""
     idNomina = models.AutoField(primary_key=True)
     empleado = models.ForeignKey(Empleado, on_delete=models.CASCADE, db_column='idEmpleado', related_name='nominas')
     fecha_pago = models.DateField()
@@ -65,11 +70,11 @@ class Nomina(models.Model):
         db_table = 'nominas'
 
 
-# --- NUEVO: MÓDULO DE CONFIGURACIÓN DE NÓMINA ---
 class ConfiguracionNomina(models.Model):
+    """Global payroll configuration: deduction % and fixed bonus amount."""
     idConfiguracion = models.AutoField(primary_key=True)
-    porcentaje_deduccion = models.DecimalField(max_digits=5, decimal_places=2, default=10.00) # Porcentaje de deducciones, ej: 10.00%
-    bono_fijo = models.DecimalField(max_digits=10, decimal_places=2, default=120.00)          # Bono fijo, ej: $120.00
+    porcentaje_deduccion = models.DecimalField(max_digits=5, decimal_places=2, default=10.00)
+    bono_fijo = models.DecimalField(max_digits=10, decimal_places=2, default=120.00)
     fecha_vigencia = models.DateField(auto_now_add=True)
 
     class Meta:

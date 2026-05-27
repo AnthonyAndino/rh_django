@@ -1,3 +1,12 @@
+# Management command: python manage.py seed_data
+#
+# Populates the database with realistic demo data:
+#   - 3 user accounts (admin + 2 employees)
+#   - 25 employees across 7 departments
+#   - Payroll config (10% deduction, $120 bonus)
+#   - 60 days of attendance per active employee (skips weekends, ~12% absence)
+#   - 6 months of payroll records per active employee
+
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from empleados.models import Empleado, Asistencia, Nomina, UserProfile, ConfiguracionNomina
@@ -12,6 +21,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write('Poblando base de datos con datos demo...')
 
+        # Wipe existing data before seeding
         Nomina.objects.all().delete()
         Asistencia.objects.all().delete()
         Empleado.objects.all().delete()
@@ -81,17 +91,20 @@ class Command(BaseCommand):
             )
             empleados_creados.append(emp)
 
+        # Link empleado1 to first employee (Carlos Mendoza) and empleado2 to third (Roberto Gomez)
         if empleados_creados:
             emp_user1.empleado = empleados_creados[0]
             emp_user1.save()
             emp_user2.empleado = empleados_creados[2]
             emp_user2.save()
 
+        # Create default payroll config
         ConfiguracionNomina.objects.create(
             porcentaje_deduccion=Decimal('10.00'),
             bono_fijo=Decimal('120.00'),
         )
 
+        # Generate 60 days of attendance for active employees
         hoy = date.today()
         empleados_activos = Empleado.objects.filter(estatus='Activo')
         for emp in empleados_activos:
@@ -116,6 +129,7 @@ class Command(BaseCommand):
                     }
                 )
 
+        # Generate 6 months of payroll records for active employees
         for emp in empleados_activos:
             for mes in range(6):
                 referencia = date(hoy.year, hoy.month, 1)

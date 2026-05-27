@@ -1,7 +1,11 @@
-import { useMemo } from 'react';
+// Reusable employee form — used by both AgregarEmpleado and EditarEmpleado.
+// Fields: nombre, puesto, departamento, correo, telefono, fecha contratación,
+// sueldo (NumericFormat), estatus (TomSelect), foto perfil (hidden input + ref).
+import { useMemo, useRef } from 'react';
 import { NumericFormat } from 'react-number-format';
 import TomSelect from '../components/TomSelect';
-import { Calendar, User, Mail, Phone, Image, Award, ToggleLeft } from 'lucide-react';
+import DatePicker from '../components/DatePicker';
+import { User, Mail, Phone, Image, Award, ToggleLeft } from 'lucide-react';
 
 export default function EmpleadoForm({
     empleado,
@@ -22,9 +26,10 @@ export default function EmpleadoForm({
         }
     };
 
+    const fileInputRef = useRef(null);
+
     return (
         <form onSubmit={onSubmit} className="row g-4 animate-fade-in">
-            {/* Campo Nombre */}
             <div className="col-md-6">
                 <label className="form-label">Nombre Completo</label>
                 <div className="input-icon-group">
@@ -40,7 +45,6 @@ export default function EmpleadoForm({
                 </div>
             </div>
 
-            {/* Campo Puesto */}
             <div className="col-md-6">
                 <label className="form-label">Puesto Organizacional</label>
                 <div className="input-icon-group">
@@ -56,7 +60,6 @@ export default function EmpleadoForm({
                 </div>
             </div>
 
-            {/* Campo Departamento */}
             <div className="col-md-6">
                 <label className="form-label">Departamento</label>
                 <div className="input-icon-group">
@@ -72,7 +75,6 @@ export default function EmpleadoForm({
                 </div>
             </div>
 
-            {/* Campo Correo Corporativo */}
             <div className="col-md-6">
                 <label className="form-label">Correo Corporativo</label>
                 <div className="input-icon-group">
@@ -88,7 +90,6 @@ export default function EmpleadoForm({
                 </div>
             </div>
 
-            {/* Campo Teléfono */}
             <div className="col-md-6">
                 <label className="form-label">Teléfono de Contacto</label>
                 <div className="input-icon-group">
@@ -103,22 +104,14 @@ export default function EmpleadoForm({
                 </div>
             </div>
 
-            {/* Campo Fecha Contratación */}
             <div className="col-md-6">
-                <label className="form-label">Fecha de Contratación</label>
-                <div className="input-icon-group">
-                    <Calendar size={18} />
-                    <input 
-                        type="date"
-                        className="form-control"
-                        value={empleado.fecha_contratacion}
-                        onChange={(e) => onChange('fecha_contratacion', e.target.value)}
-                        required
-                    />
-                </div>
+                <DatePicker
+                    label="Fecha de Contratación"
+                    value={empleado.fecha_contratacion}
+                    onChange={(value) => onChange('fecha_contratacion', value)}
+                />
             </div>
 
-            {/* Campo Sueldo */}
             <div className="col-md-6">
                 <label className="form-label">Sueldo Mensual ($)</label>
                 <NumericFormat 
@@ -134,28 +127,33 @@ export default function EmpleadoForm({
                 />
             </div>
 
-            {/* Campo Estatus */}
             <div className="col-md-6">
                 <label className="form-label">Estatus de Servicio</label>
                 <TomSelect
                     value={empleado.estatus}
-                    onChange={(e) => onChange('estatus', e.target.value)}
+                    onChange={(value) => onChange('estatus', value)}
                     options={estatusOptions}
                     placeholder="Seleccionar estatus"
                 />
             </div>
 
-            {/* Campo Foto de Perfil */}
+            {/* Photo upload — hidden input triggered by clicking the styled .file-upload container */}
             <div className="col-md-12">
                 <label className="form-label">Foto de Perfil (Opcional)</label>
-                <div className="input-icon-group">
-                    <Image size={18} />
-                    <input 
-                        type="file"
-                        accept="image/*"
-                        className="form-control"
-                        onChange={handleFileChange}
-                    />
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    hidden
+                />
+                <div className="file-upload" onClick={() => fileInputRef.current?.click()}>
+                    <Image size={18} className="file-upload__icon" />
+                    <span className={`file-upload__text${empleado.foto_perfil instanceof File ? '' : ' file-upload__text--placeholder'}`}>
+                        {empleado.foto_perfil instanceof File
+                            ? empleado.foto_perfil.name
+                            : 'Subir foto de perfil'}
+                    </span>
                 </div>
                 {empleado.foto_perfil && typeof empleado.foto_perfil === 'string' && (
                     <div className="mt-2 text-secondary small">
@@ -164,7 +162,6 @@ export default function EmpleadoForm({
                 )}
             </div>
 
-            {/* Botones de Envío */}
             <div className="col-12 d-flex gap-3 mt-4">
                 <button type="submit" className="btn btn-primary px-4 py-2.5" disabled={enviando}>
                     {enviando ? 'Guardando...' : textoBoton}

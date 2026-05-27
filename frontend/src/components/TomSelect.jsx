@@ -1,61 +1,69 @@
-import { useRef, useEffect } from 'react';
-import TomSelect from 'tom-select';
-import 'tom-select/dist/css/tom-select.css';
+// Custom select dropdown — accessible replacement for native <select>.
+// Features: trigger button with chevron arrow (rotates on open),
+// dropdown with highlighted selected option, click-outside and Escape handling.
+import { useState, useRef, useEffect } from 'react';
+import { ChevronDown } from 'lucide-react';
 
-export default function TomSelectWrapper({ id, value, onChange, options, placeholder, className }) {
-  const selectRef = useRef(null);
-  const instanceRef = useRef(null);
+export default function MinimalSelect({ id, value, onChange, options, placeholder, className }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
+
+  const selectedOption = options.find(opt => opt.value === value);
 
   useEffect(() => {
-    if (selectRef.current) {
-      instanceRef.current = new TomSelect(selectRef.current, {
-        valueField: 'value',
-        labelField: 'text',
-        searchField: 'text',
-        placeholder: placeholder || 'Seleccionar...',
-        allowEmptyOption: true,
-        onChange: (val) => {
-          const native = selectRef.current;
-          if (native) {
-            native.value = val;
-            native.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        },
-      });
-    }
-    return () => {
-      if (instanceRef.current) {
-        instanceRef.current.destroy();
-        instanceRef.current = null;
+    function handleClickOutside(e) {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
       }
-    };
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
-    if (instanceRef.current) {
-      const currentVal = instanceRef.current.getValue();
-      const strVal = value == null ? '' : String(value);
-      if (currentVal !== strVal) {
-        instanceRef.current.setValue(strVal);
-      }
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') setIsOpen(false);
     }
-  }, [value]);
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen]);
+
+  const handleSelect = (optionValue) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
 
   return (
-    <select
-      ref={selectRef}
-      id={id}
-      className={className || 'form-select'}
-      value={value}
-      onChange={(e) => onChange(e)}
-      style={{ display: 'none' }}
-      autoComplete="off"
-    >
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.text}
-        </option>
-      ))}
-    </select>
+    <div className={`minimal-select ${className || ''}`} ref={containerRef}>
+      <button
+        type="button"
+        className="minimal-select__trigger"
+        onClick={() => setIsOpen(prev => !prev)}
+        id={id}
+      >
+        <span className={`minimal-select__text ${!selectedOption ? 'minimal-select__text--placeholder' : ''}`}>
+          {selectedOption ? selectedOption.text : placeholder}
+        </span>
+        <ChevronDown
+          size={16}
+          className={`minimal-select__arrow ${isOpen ? 'minimal-select__arrow--open' : ''}`}
+        />
+      </button>
+      {isOpen && (
+        <div className="minimal-select__dropdown">
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              className={`minimal-select__option ${opt.value === value ? 'minimal-select__option--selected' : ''}`}
+              onClick={() => handleSelect(opt.value)}
+            >
+              {opt.text}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

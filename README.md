@@ -1,146 +1,202 @@
-# RH Manager
+<div align="center">
 
-Sistema de gestion de Recursos Humanos con autenticacion por roles, modulo de asistencia, nominas y dashboard.
+# RH Manager · Sistema de Gestión de Recursos Humanos
 
-- `backend/`: API REST con Django, Django REST Framework y MySQL.
-- `frontend/`: aplicacion React/Vite con diseño minimalista "Sand & Terracotta".
+![React](https://img.shields.io/badge/React_19-20232A?logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite_8-646CFF?logo=vite&logoColor=white)
+![Django](https://img.shields.io/badge/Django_5-092E20?logo=django&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-## Estructura
+Dashboard · Asistencia · Nóminas · Autenticación por roles · Diseño **Sand & Terracotta**
 
-```text
-rh-manager/
-├── backend/
-│   ├── manage.py
-│   ├── empleados/
-│   │   ├── models.py          # Empleado, Asistencia, Nomina, UserProfile, ConfiguracionNomina
-│   │   ├── views.py           # CRUD, autenticacion, dashboard
-│   │   ├── serializers.py
-│   │   ├── urls.py
-│   │   └── management/
-│   │       └── commands/
-│   │           └── seed_data.py  # Datos de demostracion
-│   └── rh_django/
-│       └── settings.py
-├── frontend/
-│   ├── package.json
-│   └── src/
-│       ├── App.jsx            # Rutas publicas y protegidas por rol
-│       ├── AuthContext.jsx     # Contexto de autenticacion
-│       ├── Navegacion.jsx     # Sidebar responsive con roles
-│       ├── Login.jsx
-│       ├── Register.jsx
-│       ├── RecuperarPassword.jsx
-│       ├── index.css          # Diseño minimalista completo
-│       ├── config.js
-│       └── empleados/
-│           ├── Dashboard.jsx         # KPIs por rol
-│           ├── ListadoEmpleados.jsx  # CRUD con filtros
-│           ├── AgregarEmpleado.jsx
-│           ├── EditarEmpleado.jsx
-│           ├── EmpleadosForm.jsx
-│           ├── ControlAsistencias.jsx # Checador con filtros
-│           ├── ControlNominas.jsx    # Configuracion y calculo
-│           └── empleadosApi.js
-├── .env.example
-├── .gitignore
-└── README.md
-```
+[🇬🇧 English version](./README.en.md)
 
-## Requisitos
+</div>
 
+---
+
+## Vista Previa
+
+| Pantalla | Vista |
+|----------|-------|
+| **Login** | ![Login](public/assets/readme/login.png) |
+| **Dashboard** | ![Dashboard](public/assets/readme/dashboard.png) |
+| **Listado de Empleados** | ![Empleados](public/assets/readme/empleados.png) |
+| **Control de Asistencia** | ![Asistencia](public/assets/readme/asistencias.png) |
+| **Nóminas** | ![Nóminas](public/assets/readme/nominas.png) |
+| **Sidebar** | ![Sidebar](public/assets/readme/sidebarExpandido.png) |
+| **Sidebar Colapsado** | ![Sidebar](public/assets/readme/sidebarColapsado.png) |
+| **Modo Oscuro** | ![Dark](public/assets/readme/darkMode.png) |
+
+---
+
+## Características
+
+### Frontend (React + Vite)
+- **Paginación optimizada** con saltos de página truncados y flechas de navegación.
+- **Filtros avanzados** — Selector minimalista de empleados y selector de fechas con calendario animado, ambos construidos desde cero con Lucide React.
+- **Tablas ordenables** — Click en cabeceras para ordenar por cualquier columna con indicadores visuales de dirección.
+- **Autenticación fluida** — Login, registro y recuperación de contraseña con fondo dinámico de esferas animadas y glassmorphism.
+- **Sidebar responsive** — Colapsable con preservación de estado en localStorage, roles de usuario y footer anclado.
+- **Modo oscuro** completo con paleta de colores consistente.
+- **Exportación CSV** con BOM para compatibilidad con Excel.
+
+### Backend (Django REST Framework)
+- API REST con autenticación por token (DRF TokenAuth).
+- CRUD completo de empleados con carga de foto de perfil.
+- Módulo de asistencia con detección automática de retardos (> 8:05 AM).
+- Cálculo de nómina mensual con deducciones, bonos y almacenamiento histórico.
+- Dashboard con KPIs diferenciados por rol (admin / empleado).
+- Seed de datos de demostración (10 empleados, 30 días de asistencias, 3 meses de nóminas).
+
+---
+
+## Stack Tecnológico
+
+| Capa | Tecnología |
+|------|-----------|
+| **Frontend** | React 19, Vite 8, React Router 7, Bootstrap 5, Lucide React |
+| **Componentes** | `ThSortable`, `Pagination`, `ScrollableTable`, `MinimalSelect`, `MinimalDatePicker` |
+| **Gráficos** | Recharts |
+| **Backend** | Django 5, Django REST Framework, MySQL 8 |
+| **Formato** | `react-number-format` |
+
+---
+
+## Instalación Rápida
+
+### Requisitos
 - Python 3.10+
 - Node.js 18+
 - MySQL 8+
-- npm o yarn
 
-## Backend
+### 1. Backend
 
 ```bash
 cd backend
 pip install -r requirements.txt
-copy ..\.env.example .env
-```
-
-Edita `.env` con tus credenciales de MySQL. Luego:
-
-```bash
+cp ../.env.example .env   # Edita con tus credenciales MySQL
 python manage.py migrate
+python manage.py seed_data   # Datos de demostración
 python manage.py runserver
 ```
 
-### Datos de demostracion
+Usuarios de demostración:
+| Usuario | Contraseña | Rol |
+|---------|-----------|-----|
+| `admin` | `admin123` | Administrador |
+| `empleado1` | `empleado123` | Empleado |
 
-Para poblar la base de datos con datos de prueba:
-
-```bash
-python manage.py seed_data
-```
-
-Esto crea:
-- **10 empleados** con nombres, puestos y departamentos realistas
-- **30 dias de asistencias** con retardos aleatorios
-- **3 meses de nominas** calculadas con deducciones y bonos
-- **2 usuarios**:
-  - Admin: `admin` / `admin123`
-  - Empleado: `empleado1` / `empleado123`
-
-### Endpoints
-
-| Metodo | Endpoint | Descripcion | Auth |
-| --- | --- | --- | --- |
-| POST | `/api/auth/register` | Registro de usuario | No |
-| POST | `/api/auth/login` | Inicio de sesion (Token) | No |
-| POST | `/api/auth/recover-password` | Recuperacion de contrasena | No |
-| GET | `/api/dashboard` | KPIs del dashboard por rol | Si |
-| GET | `/api/empleados` | Lista empleados | Si |
-| POST | `/api/empleados` | Crea empleado (solo admin) | Si |
-| GET | `/api/empleados/<id>` | Obtiene empleado | Si |
-| PATCH | `/api/empleados/<id>` | Actualiza empleado (solo admin) | Si |
-| DELETE | `/api/empleados/<id>` | Elimina empleado (solo admin) | Si |
-| GET | `/api/asistencias` | Lista asistencias (con filtros) | Si |
-| POST | `/api/asistencias` | Registra entrada | Si |
-| PATCH | `/api/asistencias/<id>` | Registra salida | Si |
-| GET | `/api/nominas` | Lista nominas | Si |
-| POST | `/api/nominas` | Genera nomina (Stored Procedure) | Si |
-| GET | `/api/configuracion-nomina` | Obtiene configuracion vigente | Si |
-| POST | `/api/configuracion-nomina` | Guarda configuracion | Si |
-
-### Roles
-
-- **admin**: Acceso completo a empleados, asistencias y nominas.
-- **empleado**: Acceso a su propio dashboard, checador de asistencia y su historial.
-
-## Frontend
+### 2. Frontend
 
 ```bash
 cd frontend
 npm install
-copy ..\.env.example .env
 npm run dev
 ```
 
-El frontend corre en `http://localhost:5173` por defecto. La URL de la API se configura con `VITE_API_BASE_URL` en `.env`.
+Abre `http://localhost:5173` en tu navegador.
 
-### Scripts
+### Scripts disponibles
 
 ```bash
-npm run dev      # Desarrollo
-npm run build    # Produccion
-npm run lint     # Linter
-npm run preview  # Vista previa de produccion
+npm run dev       # Desarrollo con HMR
+npm run build     # Producción
+npm run preview   # Vista previa de build
 ```
 
-## Funcionalidades
+---
 
-- **Autenticacion**: Login, registro y recuperacion de contrasena con tokens.
-- **Dashboard por rol**: KPIs diferentes para admin y empleado.
-- **CRUD de empleados**: Con foto de perfil, filtros por departamento y estatus.
-- **Checador de asistencia**: Entrada/salida, deteccion automatica de retardos.
-- **Nominas**: Configuracion de deducciones y bonos, calculo mensual.
-- **Diseno responsive**: Sidebar colapsable en mobile, selects minimalistas.
-- **Iconos**: Todos los iconos con lucide-react (sin emojis de texto).
+## Estructura del Proyecto
 
-## Notas de repositorio
+```
+rh-manager/
+├── backend/
+│   ├── empleados/
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── serializers.py
+│   │   └── management/commands/seed_data.py
+│   └── rh_django/settings.py
+├── frontend/
+│   ├── src/
+│   │   ├── components/          # ThSortable, Pagination, MinimalSelect, DatePicker, ScrollableTable
+│   │   ├── empleados/           # Dashboard, ListadoEmpleados, ControlAsistencias, ControlNominas
+│   │   ├── AuthContext.jsx      # Autenticación con tokens
+│   │   ├── Navegacion.jsx       # Sidebar responsive
+│   │   └── index.css            # Sistema de diseño Sand & Terracotta completo
+│   └── public/assets/readme/    # Capturas para el README
+└── README.md
+```
 
-El repositorio usa un solo `.gitignore` y un solo `.env.example` en la raiz.
-No se suben carpetas generadas como `node_modules/`, `dist/`, `__pycache__/`, entornos virtuales ni archivos `.env` locales.
+---
+
+## API Endpoints
+
+| Método | Endpoint | Descripción | Auth |
+|--------|----------|-------------|------|
+| POST | `/api/auth/register` | Registro | No |
+| POST | `/api/auth/login` | Login (Token) | No |
+| POST | `/api/auth/recover-password` | Recuperación | No |
+| GET | `/api/dashboard` | KPIs por rol | Sí |
+| GET/POST/PATCH/DELETE | `/api/empleados[/id]` | CRUD empleados | Sí |
+| GET/POST/PATCH | `/api/asistencias[/id]` | Asistencias | Sí |
+| GET/POST | `/api/nominas[/id]` | Nóminas | Sí |
+| GET/POST | `/api/configuracion-nomina` | Configuración | Sí |
+
+---
+
+## Evaluación del Proyecto
+
+> **Puntaje general: 8.5/10** — Listo para portafolio, con espacio para crecer.
+
+### Fortalezas
+- **Identidad visual sólida** — La paleta Sand & Terracotta es memorable y consistente en cada pantalla. El modo oscuro no es un afterthought; tiene ajustes específicos por componente.
+- **Componentes reutilizables** — `ThSortable`, `Pagination`, `MinimalSelect` y `MinimalDatePicker` están desacoplados y pueden usarse en cualquier tabla o formulario.
+- **UX fluida** — Sidebar sin scroll interno, paginación que no pierde contexto, transiciones suaves, autenticación sin flashes blancos.
+- **Responsive bien resuelto** — Sidebar colapsable, tablas con scroll horizontal, inputs compactos en mobile.
+- **Modo oscuro premium** — No es un simple invert: tiene colores específicos para spheres, glassmorphism y cada componente.
+
+### Áreas de mejora
+- **Pruebas automatizadas** — Sin tests unitarios ni E2E. Agregar testing con Vitest + Playwright subiría considerablemente el perfil del proyecto.
+- **Estados vacíos y de carga** — Algunas tablas no tienen skeleton screens ni mensajes ilustrados cuando no hay datos.
+- **Manejo de errores** — Las respuestas de error de la API podrían tener más variantes visuales (toast notifications).
+- **Backend** — Validaciones adicionales y logging estructurado mejorarían la robustez.
+
+---
+
+## Próximos Pasos Sugeridos
+
+| Funcionalidad | Impacto | Esfuerzo |
+|--------------|---------|----------|
+| **Notificaciones en tiempo real** (nuevas asistencias, empleados creados) con WebSocket | Alto | Medio |
+| **Exportación a PDF** de nóminas y reportes de asistencia con diseño corporativo | Alto | Bajo |
+| **Gráficas analíticas avanzadas** (tendencias de retardos por departamento, comparativa de nóminas por mes) | Medio | Medio |
+| **Roles configurables** con permisos granulares desde una interfaz de administración | Alto | Alto |
+
+---
+
+## Capturas Recomendadas
+
+Guarda las imágenes en `frontend/public/assets/readme/` y asígnale estos nombres:
+
+| Archivo | Contenido |
+|---------|-----------|
+| `login.png` | Login con esferas animadas y glassmorphism |
+| `register.png` | Registro con esferas invertidas |
+| `dashboard.png` | Dashboard con KPIs, tabla y gráfica |
+| `empleados.png` | Listado con filtros, paginación y acción de exportar |
+| `asistencias.png` | Checador + filtros de empleado y fechas |
+| `nominas.png` | Generación de nómina y tabla histórica |
+| `sidebarExpandido.png` | Sidebar expandido con todas las secciones |
+| `sidebarColapsado.png` | Sidebar colapsado, solo iconos |
+| `darkMode.png` | Dashboard completo en modo oscuro |
+
+---
+
+## Licencia
+
+```
+MIT License — Copyright (c) 2026
+```

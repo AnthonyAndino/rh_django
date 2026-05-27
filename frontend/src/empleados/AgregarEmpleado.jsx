@@ -1,3 +1,5 @@
+// Add employee page — wraps EmpleadoForm with create logic.
+// Builds FormData (supports photo upload) and POSTs via crearEmpleado().
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { crearEmpleado } from "./empleadosApi";
@@ -46,7 +48,6 @@ export default function AgregarEmpleado() {
         try {
             setEnviando(true);
 
-            // Construir el FormData para soportar carga de archivos
             const formData = new FormData();
             formData.append('nombre', nombreOk);
             formData.append('departamento', deptoOk);

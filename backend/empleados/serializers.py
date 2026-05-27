@@ -1,5 +1,10 @@
+# DRF serializers for all empleados models.
+# Handles validation, field-level read-only flags, and
+# exposes related employee names on attendance/payroll records.
+
 from rest_framework import serializers
 from .models import Empleado, Asistencia, Nomina, ConfiguracionNomina
+
 
 class EmpleadoSerializer(serializers.ModelSerializer):
     idEmpleado = serializers.IntegerField(read_only=True)
@@ -31,6 +36,7 @@ class EmpleadoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('El sueldo debe ser mayor a 0')
         return value
     
+
 class AsistenciaSerializer(serializers.ModelSerializer):
     idAsistencia = serializers.IntegerField(read_only=True)
     nombre_empleado = serializers.CharField(source='empleado.nombre', read_only=True)
@@ -38,6 +44,7 @@ class AsistenciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asistencia
         fields = ['idAsistencia', 'empleado', 'nombre_empleado', 'fecha', 'hora_entrada', 'hora_salida', 'estado']
+
 
 class NominaSerializer(serializers.ModelSerializer):
     idNomina = serializers.IntegerField(read_only=True)
@@ -54,6 +61,4 @@ class ConfiguracionNominaSerializer(serializers.ModelSerializer):
     class Meta:
         model = ConfiguracionNomina
         fields = ['idConfiguracion', 'porcentaje_deduccion', 'bono_fijo', 'fecha_vigencia']
-
-        
         

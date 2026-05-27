@@ -1,3 +1,6 @@
+// Scrollable table wrapper — detects horizontal overflow and shows
+// left/right scroll arrow buttons. Uses ResizeObserver for responsiveness
+// and adds .is-scrolled class when vertically scrolled (sticky header shadow).
 import { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 

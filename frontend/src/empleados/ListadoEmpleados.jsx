@@ -1,44 +1,42 @@
-import { useEffect, useState, useMemo } from 'react';
+// Employee directory (admin-only) — searchable, filterable, sortable, paginated table.
+// Features: 3 KPI metric cards, live search (name/puesto/departamento),
+// department + status filter dropdowns, Edit/Delete actions, CSV export.
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { NumericFormat } from 'react-number-format';
 import { Link } from "react-router-dom";
-import { obtenerEmpleados, eliminarEmpleado } from './empleadosApi';
+import { eliminarEmpleado } from './empleadosApi';
 import { useAuth } from '../AuthContext';
 import ScrollableTable from '../components/ScrollableTable';
+import ThSortable from '../components/ThSortable';
+import Pagination from '../components/Pagination';
 import TomSelect from '../components/TomSelect';
-import { Users, DollarSign, Activity, Search, UserPlus, Edit3, Trash2 } from 'lucide-react';
+import { Users, DollarSign, Activity, Search, UserPlus, Edit3, Trash2, Download } from 'lucide-react';
+import empleadosMock from '../mock/empleadosMock';
+
+const POR_PAGINA = 8;
 
 export default function ListadoEmpleados() {
     const { user } = useAuth();
-    const [empleados, setEmpleados] = useState([]);
-    const [cargando, setCargando] = useState(true);
-    const [error, setError] = useState('');
+    const [empleados] = useState(empleadosMock);
+    const [cargando] = useState(false);
+    const [error] = useState('');
     const [eliminandoId, setEliminandoId] = useState(null);
 
-    // Barra de búsqueda e Inteligencia de Filtros
     const [busqueda, setBusqueda] = useState('');
     const [filtroDepto, setFiltroDepto] = useState('');
     const [filtroEstatus, setFiltroEstatus] = useState('');
 
+    const [sortField, setSortField] = useState(null);
+    const [sortDirection, setSortDirection] = useState('asc');
+
+    const [paginaActual, setPaginaActual] = useState(1);
+
     const esAdmin = user?.rol === 'admin';
 
-    const cargar = async () => {
-        try {
-            const { data } = await obtenerEmpleados();
-            setEmpleados(Array.isArray(data) ? data : []);
-        } catch (e) {
-            console.error("Error al cargar empleados:", e);
-            setError('No se puede cargar el listado de empleados.');
-        }
-    };
-
     useEffect(() => {
-        const boot = async () => {
-            setCargando(true);
-            await cargar();
-            setCargando(false);
-        };
-        boot();
-    }, []);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPaginaActual(1);
+    }, [busqueda, filtroDepto, filtroEstatus]);
 
     const eliminar = async (idEmpleado) => {
         const ok = window.confirm('¿Seguro que deseas eliminar este empleado?');
@@ -47,7 +45,6 @@ export default function ListadoEmpleados() {
         try {
             setEliminandoId(idEmpleado);
             await eliminarEmpleado(idEmpleado);
-            await cargar();
         } catch (e) {
             console.error("Error al eliminar empleado:", e);
             alert('No se pudo eliminar el empleado.');
@@ -56,7 +53,16 @@ export default function ListadoEmpleados() {
         }
     };
 
-    // --- LECCIÓN DE JS: OBTENER DEPTOS ÚNICOS PARA EL FILTRO ---
+    const ordenar = (campo) => {
+        if (sortField === campo) {
+            setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(campo);
+            setSortDirection('asc');
+        }
+        setPaginaActual(1);
+    };
+
     const departamentosUnicos = Array.from(
         new Set(empleados.map((e) => e.departamento).filter(Boolean))
     );
@@ -71,12 +77,12 @@ export default function ListadoEmpleados() {
         { value: 'Suspendido', text: 'Suspendido' },
     ], []);
 
-    // --- CALCULO DE METRICAS ---
+    // KPI metrics
     const totalEmpleados = empleados.filter(e => e.estatus === 'Activo').length;
     const nominaTotal = empleados.reduce((acc, emp) => acc + Number(emp.sueldo), 0);
     const sueldoPromedio = empleados.length > 0 ? (nominaTotal / empleados.length) : 0;
 
-    // --- FILTRADO EN VIVO ---
+    // Live filtering
     const empleadosFiltrados = empleados.filter((e) => {
         const matchesBusqueda = 
             e.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -89,12 +95,61 @@ export default function ListadoEmpleados() {
         return matchesBusqueda && matchesDepto && matchesEstatus;
     });
 
+    // Sorting
+    const empleadosOrdenados = useMemo(() => {
+        if (!sortField) return empleadosFiltrados;
+        return [...empleadosFiltrados].sort((a, b) => {
+            let valA = a[sortField];
+            let valB = b[sortField];
+            if (sortField === 'sueldo') {
+                valA = Number(valA);
+                valB = Number(valB);
+            } else if (sortField === 'idEmpleado') {
+                valA = Number(valA);
+                valB = Number(valB);
+            } else {
+                valA = String(valA || '').toLowerCase();
+                valB = String(valB || '').toLowerCase();
+            }
+            if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }, [empleadosFiltrados, sortField, sortDirection]);
+
+    // Pagination
+    const totalPaginas = Math.max(1, Math.ceil(empleadosOrdenados.length / POR_PAGINA));
+    const paginaSegura = Math.min(paginaActual, totalPaginas);
+    const inicio = (paginaSegura - 1) * POR_PAGINA;
+    const fin = Math.min(inicio + POR_PAGINA, empleadosOrdenados.length);
+    const empleadosPagina = empleadosOrdenados.slice(inicio, fin);
+
+    // CSV export
+    const exportarCSV = useCallback(() => {
+        const cabeceras = ['ID', 'Nombre', 'Puesto', 'Departamento', 'Sueldo', 'Estatus'];
+        const filas = empleadosOrdenados.map(e => [
+            e.idEmpleado,
+            `"${e.nombre}"`,
+            `"${e.puesto}"`,
+            `"${e.departamento}"`,
+            e.sueldo,
+            e.estatus
+        ]);
+        const csv = [cabeceras.join(','), ...filas.map(r => r.join(','))].join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'empleados.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }, [empleadosOrdenados]);
+
     if (cargando) return <div className="text-center py-5"><p className="text-secondary">Cargando...</p></div>;
     if (error) return <div className="alert alert-danger my-4">{error}</div>;
 
     return (
         <div className="container-fluid px-0 animate-fade-in">
-            {/* Cabecera */}
             <div className="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
                 <div>
                     <h1 className="text-dark mb-1">Directorio de Personal</h1>
@@ -108,7 +163,7 @@ export default function ListadoEmpleados() {
                 )}
             </div>
 
-            {/* Indicadores clave */}
+            {/* KPI cards */}
             <div className="row g-4 mb-4">
                 <div className="col-md-4">
                     <div className="metric-card d-flex align-items-center justify-content-between">
@@ -165,9 +220,8 @@ export default function ListadoEmpleados() {
                 </div>
             </div>
 
-            {/* Barra de busqueda y filtros */}
+            {/* Search + filter bar */}
             <div className="row mb-4 g-3 align-items-center">
-                {/* Cuadro de texto */}
                 <div className="col-lg-6 col-md-12">
                     <div className="input-search-wrapper">
                         <Search size={18} className="input-search-icon" />
@@ -181,52 +235,64 @@ export default function ListadoEmpleados() {
                     </div>
                 </div>
                 
-                {/* Selector de Departamento */}
                 <div className="col-lg-3 col-md-6">
                     <TomSelect
                         value={filtroDepto}
-                        onChange={(e) => setFiltroDepto(e.target.value)}
+                        onChange={setFiltroDepto}
                         options={deptosOptions}
                         placeholder="Todos los Departamentos"
                     />
                 </div>
 
-                {/* Selector de Estatus */}
                 <div className="col-lg-3 col-md-6">
                     <TomSelect
                         value={filtroEstatus}
-                        onChange={(e) => setFiltroEstatus(e.target.value)}
+                        onChange={setFiltroEstatus}
                         options={estatusOptions}
                         placeholder="Todos los Estatus"
                     />
                 </div>
             </div>
 
-            {/* La tabla */}
+            {/* Table */}
             <div className="card">
-                <div className="card-header">
-                    Listado de Personal Corporativo
+                <div className="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <span>
+                        Listado de Personal{' '}
+                        <span className="text-muted fw-normal">
+                            ({empleadosOrdenados.length} Total)
+                        </span>
+                    </span>
+                    <button
+                        onClick={exportarCSV}
+                        className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+                        style={{ borderRadius: 'var(--border-radius-md)' }}
+                    >
+                        <Download size={14} />
+                        Exportar
+                    </button>
                 </div>
                 <div className="card-body p-0">
-                    {empleadosFiltrados.length === 0 ? (
+                    {empleadosPagina.length === 0 ? (
                         <div className="p-5 text-center">
                             <p className="mb-0 text-secondary">No se encontraron empleados con las condiciones especificadas.</p>
                         </div>
                     ) : (
+                        <>
                         <ScrollableTable>
                             <table className="table table-hover align-middle">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: 80 }}>ID</th>
-                                        <th>Empleado</th>
-                                        <th>Puesto / Área</th>
-                                        <th>Sueldo Mensual</th>
-                                        <th>Estatus</th>
+                                        <ThSortable campo="idEmpleado" sortField={sortField} sortDirection={sortDirection} onSort={ordenar} style={{ width: 80 }}>ID</ThSortable>
+                                        <ThSortable campo="nombre" sortField={sortField} sortDirection={sortDirection} onSort={ordenar}>Empleado</ThSortable>
+                                        <ThSortable campo="puesto" sortField={sortField} sortDirection={sortDirection} onSort={ordenar}>Puesto / Área</ThSortable>
+                                        <ThSortable campo="sueldo" sortField={sortField} sortDirection={sortDirection} onSort={ordenar}>Sueldo Mensual</ThSortable>
+                                        <ThSortable campo="estatus" sortField={sortField} sortDirection={sortDirection} onSort={ordenar}>Estatus</ThSortable>
                                         {esAdmin && <th style={{ width: 180 }} className="text-end">Acciones</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {empleadosFiltrados.map((e) => (
+                                    {empleadosPagina.map((e) => (
                                         <tr key={e.idEmpleado}>
                                             <td className="text-secondary font-monospace">#{e.idEmpleado}</td>
                                             <td>
@@ -301,6 +367,16 @@ export default function ListadoEmpleados() {
                                 </tbody>
                             </table>
                         </ScrollableTable>
+
+                        <Pagination
+                            paginaActual={paginaSegura}
+                            totalPaginas={totalPaginas}
+                            onPageChange={setPaginaActual}
+                            total={empleadosOrdenados.length}
+                            inicio={inicio}
+                            fin={fin}
+                        />
+                        </>
                     )}
                 </div>
             </div>

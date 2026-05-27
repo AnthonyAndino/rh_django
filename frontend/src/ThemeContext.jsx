@@ -1,4 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
+// Theme context — manages light/dark mode.
+// Persists choice to localStorage('theme') and sets data-theme on <html>.
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext();

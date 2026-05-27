@@ -14,22 +14,20 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env at project root
 load_dotenv(BASE_DIR.parent / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-3ocr6!z+gv4y^%xe9tgrqo+xb-e@xp&ze9d2fqg^g6s-*o44g_',
 )
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get(
@@ -96,6 +94,7 @@ WSGI_APPLICATION = 'rh_django.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# MySQL with utf8mb4 charset — config via .env
 
 DATABASES = {
     'default': {
@@ -150,16 +149,16 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-#--- CORS ---
+
+# CORS — allow the Vite dev server and any alternative ports
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "http://127.0.0.1:5173",
     "http://localhost:5173",
 ]
 
-# --- ARCHIVOS MULTIMEDIA (Fotos de Perfil) ---
+# Media files — profile photos uploaded to /media/foto_perfil/
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# --- DEFAULT AUTO FIELD ---
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

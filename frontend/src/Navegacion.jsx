@@ -1,3 +1,7 @@
+// Sidebar navigation — collapsible, responsive, with role-based links.
+// Admin: Dashboard, Personal, Asistencias, Nóminas
+// Employee: Dashboard, Asistencias
+// Also includes theme toggle and logout.
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { useTheme } from "./ThemeContext";

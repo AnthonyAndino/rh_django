@@ -1,3 +1,5 @@
+// Edit employee page — loads existing employee by URL param, pre-populates
+// EmpleadoForm. Builds FormData and PATCHes via actualizarEmpleado().
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { obtenerEmpleado, actualizarEmpleado } from "./empleadosApi";
@@ -76,7 +78,6 @@ export default function EditarEmpleado() {
         try {
             setEnviando(true);
 
-            // FormData para soportar carga de archivos
             const formData = new FormData();
             formData.append('nombre', nombreOk);
             formData.append('departamento', deptoOk);
@@ -87,7 +88,6 @@ export default function EditarEmpleado() {
             formData.append('telefono', empleado.telefono ? empleado.telefono.trim() : '');
             formData.append('estatus', empleado.estatus);
             
-            // Si cargó una nueva foto de tipo File, la adjuntamos
             if (empleado.foto_perfil instanceof File) {
                 formData.append('foto_perfil', empleado.foto_perfil);
             }

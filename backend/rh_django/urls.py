@@ -1,3 +1,6 @@
+# Root URL configuration for rh_django.
+# Routes /admin/ to Django admin and everything else to the empleados app.
+# In DEBUG mode, also serves uploaded media files (profile photos).
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
@@ -8,6 +11,5 @@ urlpatterns = [
     path('', include('empleados.urls')),
 ]
 
-# Sirve archivos de media (fotos de perfil) en modo desarrollo
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

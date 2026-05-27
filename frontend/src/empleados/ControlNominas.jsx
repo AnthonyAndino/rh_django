@@ -1,62 +1,50 @@
-import { useEffect, useState } from 'react';
+// Payroll control page — admin sees two config cards (deduction % + fixed bonus,
+// payroll generation with date picker calling a stored procedure) plus a
+// sortable/paginated payroll history table with CSV export.
+// Employees see only their own payroll history.
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '../AuthContext';
-import { obtenerNominas, generarNominaMensual, obtenerConfiguracionNomina, guardarConfiguracionNomina } from './empleadosApi';
+import { generarNominaMensual, guardarConfiguracionNomina } from './empleadosApi';
 import ScrollableTable from '../components/ScrollableTable';
+import ThSortable from '../components/ThSortable';
+import Pagination from '../components/Pagination';
 import { NumericFormat } from 'react-number-format';
 import DatePicker from '../components/DatePicker';
-import { DollarSign, TrendingUp, Settings, AlertCircle } from 'lucide-react';
+import { DollarSign, TrendingUp, Settings, AlertCircle, Download } from 'lucide-react';
+import nominasMock from '../mock/nominasMock';
+
+const POR_PAGINA = 8;
 
 export default function ControlNominas() {
     const { user } = useAuth();
-    const [nominas, setNominas] = useState([]);
-    const [cargando, setCargando] = useState(true);
+    const [nominas, setNominas] = useState(nominasMock);
+    const [cargando] = useState(false);
     const [config, setConfig] = useState(null);
 
-    // Formulario de Nueva Configuración (Solo Admin)
     const [deduccionVal, setDeduccionVal] = useState('10.00');
     const [bonoVal, setBonoVal] = useState('120.00');
     const [guardandoConfig, setGuardandoConfig] = useState(false);
 
-    // Formulario de Generar Nómina (Solo Admin)
-    const [fechaPago, setFechaPago] = useState('');
+    const hoy = new Date().toISOString().split('T')[0];
+    const [fechaPago, setFechaPago] = useState(hoy);
     const [generandoNomina, setGenerandoNomina] = useState(false);
     const [mensaje, setMensaje] = useState({ texto: '', tipo: '' });
 
+    const [sortField, setSortField] = useState(null);
+    const [sortDirection, setSortDirection] = useState('asc');
+    const [paginaActual, setPaginaActual] = useState(1);
+
     const esAdmin = user?.rol === 'admin';
 
-    const cargarDatos = async () => {
-        try {
-            const resNominas = await obtenerNominas();
-            setNominas(resNominas.data);
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPaginaActual(1);
+    }, [sortField, sortDirection]);
 
-            if (esAdmin) {
-                const resConfig = await obtenerConfiguracionNomina();
-                if (resConfig.data.length > 0) {
-                    const activeConfig = resConfig.data[0];
-                    setConfig(activeConfig);
-                    setDeduccionVal(activeConfig.porcentaje_deduccion);
-                    setBonoVal(activeConfig.bono_fijo);
-                }
-            }
-        } catch (e) {
-            console.error("Error al cargar datos", e);
-        }
+    const cargarDatos = () => {
+        setNominas(nominasMock);
     };
 
-    useEffect(() => {
-        const boot = async () => {
-            setCargando(true);
-            await cargarDatos();
-            // Poner fecha de pago por defecto al último día de este mes
-            const hoy = new Date();
-            const ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-            setFechaPago(ultimoDia.toISOString().split('T')[0]);
-            setCargando(false);
-        };
-        boot();
-    }, []);
-
-    // Guardar nueva configuración
     const handleGuardarConfig = async (e) => {
         e.preventDefault();
         try {
@@ -79,7 +67,6 @@ export default function ControlNominas() {
         }
     };
 
-    // Generar nóminas llamando al Stored Procedure
     const handleGenerarNomina = async (e) => {
         e.preventDefault();
         if (!fechaPago) {
@@ -105,20 +92,73 @@ export default function ControlNominas() {
         }
     };
 
+    const ordenar = (campo) => {
+        if (sortField === campo) {
+            setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortField(campo);
+            setSortDirection('asc');
+        }
+        setPaginaActual(1);
+    };
+
+    const nominasOrdenadas = useMemo(() => {
+        if (!sortField) return nominas;
+        return [...nominas].sort((a, b) => {
+            let valA = a[sortField];
+            let valB = b[sortField];
+            if (['sueldo_base', 'deducciones', 'bonos', 'sueldo_neto'].includes(sortField)) {
+                valA = Number(valA);
+                valB = Number(valB);
+            } else {
+                valA = String(valA || '').toLowerCase();
+                valB = String(valB || '').toLowerCase();
+            }
+            if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }, [nominas, sortField, sortDirection]);
+
+    const totalPaginas = Math.max(1, Math.ceil(nominasOrdenadas.length / POR_PAGINA));
+    const paginaSegura = Math.min(paginaActual, totalPaginas);
+    const inicio = (paginaSegura - 1) * POR_PAGINA;
+    const fin = Math.min(inicio + POR_PAGINA, nominasOrdenadas.length);
+    const nominasPagina = nominasOrdenadas.slice(inicio, fin);
+
+    const exportarCSV = useCallback(() => {
+        if (nominasOrdenadas.length === 0) return;
+        const cabeceras = ['Empleado', 'Fecha Pago', 'Sueldo Base', 'Deducciones', 'Bonos', 'Sueldo Neto'];
+        const filas = nominasOrdenadas.map(n => [
+            `"${n.nombre_empleado}"`,
+            n.fecha_pago,
+            n.sueldo_base,
+            n.deducciones,
+            n.bonos,
+            n.sueldo_neto
+        ]);
+        const csv = [cabeceras.join(','), ...filas.map(r => r.join(','))].join('\n');
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'nominas.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+    }, [nominasOrdenadas]);
+
     if (cargando) return <div className="text-center py-5"><p className="text-secondary">Cargando libro de nóminas...</p></div>;
 
     return (
         <div className="container-fluid px-0 animate-fade-in">
-            {/* Cabecera */}
             <div className="mb-4">
                 <h1 className="text-dark mb-1">Nómina Corporativa</h1>
                 <p className="text-muted mb-0">Gestión financiera, retenciones, bonificaciones y libro de salarios.</p>
             </div>
 
-            {/* Fila de formularios superiores para el Administrador */}
             {esAdmin && (
                 <div className="row g-4 mb-4">
-                    {/* Panel 1: Configuracion de parametros */}
+                    {/* Config card */}
                     <div className="col-md-6">
                         <div className="card">
                             <div className="card-header d-flex align-items-center gap-2">
@@ -166,7 +206,7 @@ export default function ControlNominas() {
                         </div>
                     </div>
 
-                    {/* Panel 2: Generar nómina mensual */}
+                    {/* Generate payroll card */}
                     <div className="col-md-6">
                         <div className="card">
                             <div className="card-header d-flex align-items-center gap-2">
@@ -179,7 +219,7 @@ export default function ControlNominas() {
                                         <DatePicker
                                             label="Fecha de Pago"
                                             value={fechaPago}
-                                            onChange={(e) => setFechaPago(e.target.value)}
+                                            onChange={setFechaPago}
                                         />
                                     </div>
                                     <button 
@@ -200,7 +240,6 @@ export default function ControlNominas() {
                 </div>
             )}
 
-            {/* Alertas globales de confirmación */}
             {mensaje.texto && (
                 <div className={`alert alert-${mensaje.tipo} mb-4 rounded-3 d-flex align-items-center gap-2 small`} role="alert">
                     <AlertCircle size={16} />
@@ -208,32 +247,45 @@ export default function ControlNominas() {
                 </div>
             )}
 
-            {/* La tabla general */}
+            {/* Payroll history table */}
             <div className="card">
-                <div className="card-header d-flex align-items-center gap-2">
-                    <DollarSign className="text-primary" size={20} />
-                    <span>{esAdmin ? 'Historial General de Nóminas Pagadas' : 'Mi Historial de Nóminas y Recibos'}</span>
+                <div className="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <span>
+                        {esAdmin ? 'Historial General de Nóminas Pagadas' : 'Mi Historial de Nóminas y Recibos'}
+                        <span className="text-muted fw-normal ms-1">({nominasOrdenadas.length} Total)</span>
+                    </span>
+                    {nominasOrdenadas.length > 0 && (
+                        <button
+                            onClick={exportarCSV}
+                            className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1"
+                            style={{ borderRadius: 'var(--border-radius-md)' }}
+                        >
+                            <Download size={14} />
+                            Exportar
+                        </button>
+                    )}
                 </div>
                 <div className="card-body p-0">
-                    {nominas.length === 0 ? (
+                    {nominasPagina.length === 0 ? (
                         <div className="p-5 text-center">
                             <p className="text-secondary mb-0">No se han encontrado registros de nómina calculados.</p>
                         </div>
                     ) : (
+                        <>
                         <ScrollableTable>
                             <table className="table table-hover align-middle">
                                 <thead>
                                     <tr>
-                                        <th>Empleado</th>
-                                        <th>Fecha Pago</th>
-                                        <th>Sueldo Base</th>
-                                        <th className="text-danger">Deducciones</th>
-                                        <th className="text-success">Bonos</th>
-                                        <th>Sueldo Neto</th>
+                                        <ThSortable campo="nombre_empleado" sortField={sortField} sortDirection={sortDirection} onSort={ordenar}>Empleado</ThSortable>
+                                        <ThSortable campo="fecha_pago" sortField={sortField} sortDirection={sortDirection} onSort={ordenar}>Fecha Pago</ThSortable>
+                                        <ThSortable campo="sueldo_base" sortField={sortField} sortDirection={sortDirection} onSort={ordenar}>Sueldo Base</ThSortable>
+                                        <ThSortable campo="deducciones" sortField={sortField} sortDirection={sortDirection} onSort={ordenar} className="text-danger">Deducciones</ThSortable>
+                                        <ThSortable campo="bonos" sortField={sortField} sortDirection={sortDirection} onSort={ordenar} className="text-success">Bonos</ThSortable>
+                                        <ThSortable campo="sueldo_neto" sortField={sortField} sortDirection={sortDirection} onSort={ordenar}>Sueldo Neto</ThSortable>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {nominas.map((nom) => (
+                                    {nominasPagina.map((nom) => (
                                         <tr key={nom.idNomina}>
                                             <td className="fw-semibold">{nom.nombre_empleado}</td>
                                             <td className="text-secondary">{nom.fecha_pago}</td>
@@ -289,6 +341,16 @@ export default function ControlNominas() {
                                 </tbody>
                             </table>
                         </ScrollableTable>
+
+                        <Pagination
+                            paginaActual={paginaSegura}
+                            totalPaginas={totalPaginas}
+                            onPageChange={setPaginaActual}
+                            total={nominasOrdenadas.length}
+                            inicio={inicio}
+                            fin={fin}
+                        />
+                        </>
                     )}
                 </div>
             </div>
