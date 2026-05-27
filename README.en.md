@@ -132,36 +132,6 @@ rh-manager/
 
 ---
 
-## Project Evaluation
-
-> **Overall score: 8.5/10** — Portfolio-ready with room to grow.
-
-### Strengths
-- **Strong visual identity** — The Sand & Terracotta palette is memorable and consistent across every screen. Dark mode has component-specific adjustments, not global inversion.
-- **Reusable components** — `ThSortable`, `Pagination`, `MinimalSelect`, and `MinimalDatePicker` are decoupled and ready for any table or form.
-- **Smooth UX** — Scroll-free sidebar, context-preserving pagination, fluid transitions, flash-free authentication.
-- **Polished responsive** — Collapsible sidebar, horizontally-scrollable tables, compact mobile inputs.
-- **Premium dark mode** — Specific colors for spheres, glassmorphism, and every UI element.
-
-### Areas for Improvement
-- **Automated testing** — No unit or E2E tests. Adding Vitest + Playwright would significantly boost the project's profile.
-- **Empty & loading states** — Some tables lack skeleton screens or illustrated empty-state messages.
-- **Error handling** — API error responses could have more visual variants (toast notifications).
-- **Backend** — Additional validations and structured logging would improve robustness.
-
----
-
-## Suggested Next Steps
-
-| Feature | Impact | Effort |
-|---------|--------|--------|
-| **Real-time notifications** (new attendance, employee created) via WebSocket | High | Medium |
-| **PDF export** for payroll and attendance reports with corporate design | High | Low |
-| **Advanced analytics charts** (late trends by department, monthly payroll comparisons) | Medium | Medium |
-| **Configurable roles** with granular permissions from an admin UI | High | High |
-
----
-
 ## Gallery
 
 | Screen | Preview |
