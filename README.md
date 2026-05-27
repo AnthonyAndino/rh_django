@@ -134,36 +134,6 @@ rh-manager/
 
 ---
 
-## Evaluación del Proyecto
-
-> **Puntaje general: 8.5/10** — Listo para portafolio, con espacio para crecer.
-
-### Fortalezas
-- **Identidad visual sólida** — La paleta Sand & Terracotta es memorable y consistente en cada pantalla. El modo oscuro no es un afterthought; tiene ajustes específicos por componente.
-- **Componentes reutilizables** — `ThSortable`, `Pagination`, `MinimalSelect` y `MinimalDatePicker` están desacoplados y pueden usarse en cualquier tabla o formulario.
-- **UX fluida** — Sidebar sin scroll interno, paginación que no pierde contexto, transiciones suaves, autenticación sin flashes blancos.
-- **Responsive bien resuelto** — Sidebar colapsable, tablas con scroll horizontal, inputs compactos en mobile.
-- **Modo oscuro premium** — No es un simple invert: tiene colores específicos para spheres, glassmorphism y cada componente.
-
-### Áreas de mejora
-- **Pruebas automatizadas** — Sin tests unitarios ni E2E. Agregar testing con Vitest + Playwright subiría considerablemente el perfil del proyecto.
-- **Estados vacíos y de carga** — Algunas tablas no tienen skeleton screens ni mensajes ilustrados cuando no hay datos.
-- **Manejo de errores** — Las respuestas de error de la API podrían tener más variantes visuales (toast notifications).
-- **Backend** — Validaciones adicionales y logging estructurado mejorarían la robustez.
-
----
-
-## Próximos Pasos Sugeridos
-
-| Funcionalidad | Impacto | Esfuerzo |
-|--------------|---------|----------|
-| **Notificaciones en tiempo real** (nuevas asistencias, empleados creados) con WebSocket | Alto | Medio |
-| **Exportación a PDF** de nóminas y reportes de asistencia con diseño corporativo | Alto | Bajo |
-| **Gráficas analíticas avanzadas** (tendencias de retardos por departamento, comparativa de nóminas por mes) | Medio | Medio |
-| **Roles configurables** con permisos granulares desde una interfaz de administración | Alto | Alto |
-
----
-
 ## Galería
 
 | Pantalla | Vista |
